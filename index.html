@@ -20,6 +20,14 @@
     --line: oklch(0.30 0 0);
     --line-soft: oklch(0.20 0 0);
     --accent: oklch(0.87 0.19 99);
+    --nav-w: 14rem;
+    --site-column-gap: 4rem;
+    --site-pad-top: 2.8rem;
+    --brand-size: 3.1rem;
+    --brand-line-gap: 0.52rem;
+    --brand-to-nav: 1.3rem;
+    --nav-size: 1.84rem;
+    --nav-row-gap: 0.48rem;
   }
   * { box-sizing: border-box; }
   body {
@@ -33,49 +41,47 @@
     -webkit-font-smoothing: antialiased;
   }
   main { margin: 0; }
+  figure { margin: 0; }
   .site {
     display: grid;
-    grid-template-columns: 12rem minmax(0, 1fr);
-    column-gap: 4rem;
-    width: min(1180px, calc(100% - 3rem));
+    grid-template-columns: var(--nav-w) minmax(0, 1fr);
+    column-gap: var(--site-column-gap);
+    width: min(1120px, calc(100% - 4rem));
     margin: 0 auto;
-    padding: 2.8rem 0 5rem;
+    padding: var(--site-pad-top) 0 5rem;
   }
   .sidebar {
     position: sticky;
-    top: 2.8rem;
+    top: var(--site-pad-top);
+    z-index: 1;
     align-self: start;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    width: var(--nav-w);
   }
   .brand {
     display: inline-flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.2rem;
-    margin: 0 0 1.3rem;
+    gap: var(--brand-line-gap);
+    margin: 0 0 var(--brand-to-nav);
     color: var(--ink);
     font-family: var(--brand-font);
-    font-size: 3.1rem;
+    font-size: var(--brand-size);
     font-weight: 600;
-    line-height: 0.9;
+    line-height: 1;
     letter-spacing: -0.015em;
   }
-  .brand-line { position: relative; display: inline-block; }
-  .brand-dot {
-    position: absolute;
-    left: 100%;
-    bottom: -0.05rem;
-    width: 0.95rem;
-    height: 0.95rem;
-    border-radius: 50%;
-    background: var(--accent);
+  .brand-line,
+  .nav-item {
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
   }
   .nav {
     display: flex;
     flex-direction: column;
-    gap: 0.48rem;
+    gap: var(--nav-row-gap);
     align-items: flex-start;
   }
   .nav-item {
@@ -84,8 +90,13 @@
     border: 0;
     background: none;
     color: var(--ink);
-    font: 700 1.84rem/1 var(--font-sans);
+    font-family: var(--font-sans);
+    font-size: var(--nav-size);
+    font-weight: 700;
+    line-height: 1;
     letter-spacing: -0.05em;
+    text-transform: lowercase;
+    text-decoration-thickness: 3px;
     cursor: pointer;
   }
   .nav-item:hover {
@@ -99,8 +110,10 @@
   .charts {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2rem 1.75rem;
+    gap: 2rem 2.5rem;
+    align-items: start;
   }
+  .chart { min-width: 0; }
   .charts[hidden] { display: none; }
   .wide { grid-column: 1 / -1; }
   .band-name { margin: 0; font-size: 1rem; }
@@ -154,6 +167,7 @@
       border-bottom: 1px solid var(--line);
     }
     .brand { font-size: 2.1rem; }
+    .nav-item { font-size: 1.85rem; }
   }
   @media (max-width: 760px) {
     .charts { grid-template-columns: 1fr; }
@@ -167,17 +181,17 @@
 <body>
 <div class="site">
   <header class="sidebar">
-    <div class="brand"><span class="brand-line">Fore</span><span class="brand-line">caster<i class="brand-dot" aria-hidden="true"></i></span></div>
+    <div class="brand"><span class="brand-line">Fore</span><span class="brand-line">caster</span></div>
     <nav class="nav" aria-label="按更新节奏看">
-      <button type="button" class="nav-item active" id="tab-daily" aria-controls="panel-daily">每天</button>
-      <button type="button" class="nav-item" id="tab-quarter" aria-controls="panel-quarter">每季</button>
+      <button type="button" class="nav-item active" id="tab-daily" aria-controls="panel-daily">daily</button>
+      <button type="button" class="nav-item" id="tab-quarter" aria-controls="panel-quarter">quarterly</button>
     </nav>
   </header>
   <main class="page">
   <div id="panel-daily" class="charts">
       <figure class="chart">
         <div class="head">
-          <span class="k">10 年期美债</span>
+          <span class="k">10 年期美债收益率</span>
           <span class="v"><span id="dgs-now"></span><span class="unit">%</span></span>
         </div>
         <div id="dgs" class="plot"></div>
@@ -290,7 +304,7 @@ function dailyOption(rows, unit) {
   const option = {
     animation: !reduced,
     animationDuration: 400,
-    grid: { left: 44, right: 16, top: 12, bottom: 28 },
+    grid: { left: 4, right: 8, top: 12, bottom: 28, containLabel: true },
     tooltip: {
       trigger: "axis",
       backgroundColor: "#1a1a1a",
@@ -332,7 +346,7 @@ function stepOption(points, unit) {
   return {
     animation: !reduced,
     animationDuration: 400,
-    grid: { left: 56, right: 16, top: 18, bottom: 28 },
+    grid: { left: 4, right: 8, top: 18, bottom: 28, containLabel: true },
     tooltip: {
       trigger: "axis",
       backgroundColor: "#1a1a1a",
