@@ -134,7 +134,7 @@ figure {
 
 .brand-row {
   display: inline-flex;
-  align-items: flex-end;
+  align-items: baseline;
 }
 
 .brand-line,
@@ -150,7 +150,7 @@ figure {
   height: 0.297em;
   margin-left: calc(var(--mark-gap) + var(--mark-kern));
   background: var(--accent);
-  transform: skewX(-16deg);
+  transform: translateY(0.022em) skewX(-16deg);
   transform-origin: bottom left;
 }
 
