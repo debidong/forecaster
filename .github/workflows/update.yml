@@ -1,0 +1,91 @@
+name: Update data and deploy Pages
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    # Weekdays 22:30 UTC (after US market close / FRED daily update; 06:30+1 CST)
+    - cron: "30 22 * * 1-5"
+  workflow_dispatch:
+
+concurrency:
+  group: forecaster-main
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch latest FRED and SEC EDGAR data
+        env:
+          SEC_USER_AGENT: ${{ vars.SEC_USER_AGENT || 'Forecaster 1953531014@qq.com' }}
+        run: python3 scripts/update.py
+
+      - name: Commit and push if data changed
+        id: commit
+        run: |
+          if git diff --quiet index.html; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No data changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "chore: update market and filing data"
+          git pull --rebase origin main
+          git push origin HEAD:main
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: [update]
+    if: >-
+      always() &&
+      (needs.update.result == 'success' || needs.update.result == 'skipped') &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || needs.update.outputs.changed == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Stage static site
+        run: |
+          mkdir -p _site
+          cp index.html .nojekyll _site/
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
